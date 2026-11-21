@@ -225,12 +225,14 @@
       flex: 1; min-height: 0; grid-template-columns: repeat(4, minmax(0, 1fr));
       grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 12px;
     }
+    .shared-weekdays { display: none; }
     .month-card {
       display: flex; min-height: 0; flex-direction: column; padding: 12px;
       border-color: #e8edf4; border-radius: 16px;
     }
     .month-card.current-month { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue), 0 5px 16px #5368e812; }
     .month-title { flex: 0 0 auto; margin: 2px 0 8px 2px; font-size: clamp(11px, 1vw, 14px); }
+    .month-short { display: none; }
     .month-days {
       flex: 1; min-height: 0; grid-template-rows: repeat(7, minmax(0, 1fr));
       gap: 1px 2px;
@@ -274,6 +276,114 @@
       .day { font-size: 8px; }
       .year-control { gap: 3px; }
       .year-control .today-control { padding-inline: 7px; }
+    }
+    @media (max-width: 620px) {
+      html, body {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .app {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        padding: 6px;
+      }
+      .main-layout,
+      .calendar-panel {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+      }
+      .section-heading {
+        height: 44px;
+        margin: 0 auto 6px;
+        padding: 4px;
+      }
+      .months-grid {
+        display: grid;
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: 22px repeat(12, minmax(0, 1fr));
+        grid-auto-rows: unset;
+        gap: 2px;
+        padding: 4px;
+        overflow: hidden;
+        border: 1px solid #e8edf4;
+        border-radius: 14px;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+      }
+      .shared-weekdays {
+        display: grid;
+        min-height: 0;
+        grid-template-columns: 58px repeat(7, minmax(0, 1fr));
+        align-items: center;
+      }
+      .shared-weekdays::before {
+        content: "";
+      }
+      .shared-weekdays .weekday {
+        height: 100%;
+        font-size: 8px;
+      }
+      .month-card {
+        display: grid;
+        min-width: 0;
+        min-height: 0;
+        grid-template-columns: 58px minmax(0, 1fr);
+        align-items: stretch;
+        padding: 2px 4px;
+        border: 0;
+        border-bottom: 1px solid #eef1f6;
+        border-radius: 0;
+        background: transparent;
+      }
+      .month-card:last-child { border-bottom: 0; }
+      .month-card.current-month {
+        border-color: #eef1f6;
+        box-shadow: none;
+        background: #f7f8ff;
+      }
+      .month-title {
+        display: flex;
+        min-width: 0;
+        margin: 0;
+        align-items: center;
+        font-size: clamp(7px, 2.2vw, 10px);
+        line-height: 1;
+      }
+      .month-full { display: none; }
+      .month-short { display: inline; }
+      .month-days {
+        display: grid;
+        min-height: 0;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: repeat(6, minmax(0, 1fr));
+        gap: 0 1px;
+      }
+      .month-days .weekday { display: none; }
+      .month-days .outside {
+        visibility: hidden;
+        display: grid;
+      }
+      .day {
+        min-width: 0;
+        height: 100%;
+        min-height: 0;
+        border-radius: 4px;
+        font-size: clamp(7px, 2.15vw, 9px);
+      }
+      .day.has-events::after {
+        bottom: 1px;
+        width: 2px;
+        height: 2px;
+      }
     }
   </style>
 </head>
@@ -453,7 +563,7 @@
     }
     function renderCalendar() {
       dom.yearLabel.textContent = state.year;
-      dom.months.innerHTML = MONTHS.map((month, monthIndex) => {
+      dom.months.innerHTML = `<div class="shared-weekdays" aria-hidden="true">${WEEKDAYS.map(day => `<span class="weekday">${day}</span>`).join("")}</div>` + MONTHS.map((month, monthIndex) => {
         const firstWeekday = new Date(state.year, monthIndex, 1).getDay();
         const daysInMonth = new Date(state.year, monthIndex + 1, 0).getDate();
         const cells = [];
@@ -472,7 +582,7 @@
         const trailingDays = 42 - daysInMonth - firstWeekday;
         for (let blank = 0; blank < trailingDays; blank += 1) cells.push('<span class="day outside" aria-hidden="true"></span>');
         const currentMonth = state.year === today.getFullYear() && monthIndex === today.getMonth();
-        return `<section class="month-card${currentMonth ? " current-month" : ""}" aria-label="${month} ${state.year}"${currentMonth ? ' aria-current="date"' : ""}><h3 class="month-title">${month}</h3><div class="month-days">${cells.join("")}</div></section>`;
+        return `<section class="month-card${currentMonth ? " current-month" : ""}" aria-label="${month} ${state.year}"${currentMonth ? ' aria-current="date"' : ""}><h3 class="month-title"><span class="month-full">${month}</span><span class="month-short">${month.slice(0, 3).toUpperCase()}</span></h3><div class="month-days">${cells.join("")}</div></section>`;
       }).join("");
     }
     function renderAgenda() {
