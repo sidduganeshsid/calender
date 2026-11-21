@@ -220,6 +220,8 @@
     .year-control .button.icon { width: 34px; }
     .year-label { min-width: 56px; font-size: 13px; }
     .year-control .today-control { padding: 0 10px; font-size: 10px; }
+    .year-control .view-control { width: 34px; padding: 0; font-size: 15px; }
+    .view-control { display: none; }
     .year-control .add-control { width: 34px; min-height: 34px; padding: 0; font-size: 18px; }
     .months-grid {
       flex: 1; min-height: 0; grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -262,6 +264,7 @@
       .months-grid { flex: initial; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: minmax(190px, 1fr); }
     }
     @media (max-width: 620px) {
+      .view-control { display: inline-flex; }
       .app { padding: 8px; }
       .months-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(180px, 1fr); gap: 8px; }
       .month-card { padding: 9px 7px; border-radius: 12px; }
@@ -278,32 +281,32 @@
       .year-control .today-control { padding-inline: 7px; }
     }
     @media (max-width: 620px) {
-      html, body {
+      body.compact-view {
         width: 100vw;
         height: 100vh;
         height: 100dvh;
         min-height: 0;
         overflow: hidden;
       }
-      .app {
+      body.compact-view .app {
         width: 100vw;
         height: 100vh;
         height: 100dvh;
         min-height: 0;
         padding: 6px;
       }
-      .main-layout,
-      .calendar-panel {
+      body.compact-view .main-layout,
+      body.compact-view .calendar-panel {
         width: 100%;
         height: 100%;
         min-height: 0;
       }
-      .section-heading {
+      body.compact-view .section-heading {
         height: 44px;
         margin: 0 auto 6px;
         padding: 4px;
       }
-      .months-grid {
+      body.compact-view .months-grid {
         display: grid;
         flex: 1;
         width: 100%;
@@ -319,20 +322,20 @@
         background: var(--paper);
         box-shadow: var(--shadow);
       }
-      .shared-weekdays {
+      body.compact-view .shared-weekdays {
         display: grid;
         min-height: 0;
         grid-template-columns: 58px repeat(7, minmax(0, 1fr));
         align-items: center;
       }
-      .shared-weekdays::before {
+      body.compact-view .shared-weekdays::before {
         content: "";
       }
-      .shared-weekdays .weekday {
+      body.compact-view .shared-weekdays .weekday {
         height: 100%;
         font-size: 8px;
       }
-      .month-card {
+      body.compact-view .month-card {
         display: grid;
         min-width: 0;
         min-height: 0;
@@ -344,13 +347,13 @@
         border-radius: 0;
         background: transparent;
       }
-      .month-card:last-child { border-bottom: 0; }
-      .month-card.current-month {
+      body.compact-view .month-card:last-child { border-bottom: 0; }
+      body.compact-view .month-card.current-month {
         border-color: #eef1f6;
         box-shadow: none;
         background: #f7f8ff;
       }
-      .month-title {
+      body.compact-view .month-title {
         display: flex;
         min-width: 0;
         margin: 0;
@@ -358,28 +361,28 @@
         font-size: clamp(7px, 2.2vw, 10px);
         line-height: 1;
       }
-      .month-full { display: none; }
-      .month-short { display: inline; }
-      .month-days {
+      body.compact-view .month-full { display: none; }
+      body.compact-view .month-short { display: inline; }
+      body.compact-view .month-days {
         display: grid;
         min-height: 0;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         grid-template-rows: repeat(6, minmax(0, 1fr));
         gap: 0 1px;
       }
-      .month-days .weekday { display: none; }
-      .month-days .outside {
+      body.compact-view .month-days .weekday { display: none; }
+      body.compact-view .month-days .outside {
         visibility: hidden;
         display: grid;
       }
-      .day {
+      body.compact-view .day {
         min-width: 0;
         height: 100%;
         min-height: 0;
         border-radius: 4px;
         font-size: clamp(7px, 2.15vw, 9px);
       }
-      .day.has-events::after {
+      body.compact-view .day.has-events::after {
         bottom: 1px;
         width: 2px;
         height: 2px;
@@ -387,7 +390,7 @@
     }
   </style>
 </head>
-<body>
+<body class="compact-view">
   <main class="app">
     <header class="topbar">
       <div class="brand">
@@ -408,6 +411,7 @@
             <button class="button icon" id="previous-year" type="button" aria-label="Previous year">‹</button>
             <span class="year-label" id="year-label"></span>
             <button class="button icon" id="next-year" type="button" aria-label="Next year">›</button>
+            <button class="button icon view-control" id="view-toggle" type="button" aria-label="Switch calendar view" aria-pressed="true" title="Switch calendar view">▦</button>
             <button class="button today-control" id="today-button" type="button">Today</button>
             <button class="button primary add-control" id="new-event-button" type="button" aria-label="Add event">＋</button>
           </div>
@@ -698,6 +702,12 @@
     });
     document.getElementById("previous-year").addEventListener("click", () => changeYear(-1));
     document.getElementById("next-year").addEventListener("click", () => changeYear(1));
+    document.getElementById("view-toggle").addEventListener("click", event => {
+      const compact = document.body.classList.toggle("compact-view");
+      event.currentTarget.setAttribute("aria-pressed", String(compact));
+      event.currentTarget.textContent = compact ? "▦" : "▦";
+      event.currentTarget.title = compact ? "Switch to month grid" : "Switch to compact month list";
+    });
     document.getElementById("today-button").addEventListener("click", () => {
       state.year = today.getFullYear();
       state.selectedDate = toDateKey(today);
